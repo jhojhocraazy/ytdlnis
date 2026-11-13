@@ -119,16 +119,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           $branch = "i18n/upstream-delta"
+          $repo = $env:GITHUB_REPOSITORY
           git checkout -B $branch
           git add .github/i18n-delta.md .github/i18n-delta.json
           git diff --cached --quiet
           if ($LASTEXITCODE -eq 0) { Write-Output "Sem mudancas para commit"; exit 0 }
           git commit -m "i18n: upstream delta report ($env:REPO_NAME)"
           git push --force origin "HEAD:refs/heads/$branch"
-          $existing = gh pr list --head $branch --json number --jq ".[0].number" 2>$null
+          $existing = gh pr list --repo $repo --head $branch --json number --jq ".[0].number" 2>$null
           $body = "Delta upstream detectado para $env:REPO_NAME. O relatório .github/i18n-delta.md contém as chaves e as sugestões DeepSeek. Revise e aplique somente o delta, seguindo o AGENTS.md local."
           if ($existing) {
-            gh pr edit $existing --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
+            gh pr edit --repo $repo $existing --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
           } else {
-            gh pr create --base $env:GITHUB_REF_NAME --head $branch --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
+            gh pr create --repo $repo --base $env:GITHUB_REF_NAME --head $branch --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
           }
