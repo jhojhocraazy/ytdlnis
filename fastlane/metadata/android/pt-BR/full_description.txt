@@ -1,0 +1,47 @@
+<b>YTDLnis</b> é um baixador de áudio/vídeo gratuito e de código aberto com tecnologia do yt-dlp. Baixe de mais de 1000 sites, com muitos recursos:
+
+<b>Downloads</b>
+
+- baixe áudio, vídeo ou execute comandos personalizados do yt-dlp
+- compartilhe um link com o app e baixe direto pelo cartão inferior, sem precisar abrir o app
+- modo de download rápido para começar na hora, sem esperar os dados carregarem
+- playlists e downloads em lote: edite cada item separadamente ou altere em massa o tipo, o formato, o caminho e o modelo de nome de arquivo de todos eles
+- forneça um arquivo txt com links, playlists ou consultas de pesquisa e o app processa tudo
+- fila, agendamento por data e hora, e vários downloads ao mesmo tempo
+- pause / retome e baixe novamente itens com falha ou cancelados com gestos de deslizar
+- observe fontes: acompanhe playlists e canais e baixe automaticamente novos envios
+- verificação de duplicados; buscas de dados que falharam são salvas para tentar de novo depois
+- envie para provedores de nuvem (ex.: Nextcloud) quando o caminho de download for um provedor de armazenamento externo
+- notificações ao vivo do Android 16 para cada download em execução
+
+<b>Editando seus arquivos</b>
+
+- corte vídeos por marcações de tempo ou capítulos com cortes ilimitados e, opcionalmente, mescle os cortes em um arquivo
+- recorte vídeos direto do cartão de download
+- divida itens em arquivos separados por capítulos
+- remova ou marque segmentos do SponsorBlock como capítulos
+- incorpore legendas, metadados, capítulos e miniaturas, ou edite o título e o autor
+- incruste legendas no vídeo
+- pesquise letras sincronizadas ou simples no lrclib.net, ajuste o tempo e incorpore-as ou salve como .lrc
+- modo compatível para recodificar em formatos amplamente suportados
+- modelos de nome de arquivo com pré-visualização ao vivo, ou subpastas simples por playlist, site ou tipo de download
+
+<b>Para usuários avançados</b>
+
+- terminal completo com bash, onde yt-dlp, Python, pip, FFmpeg e as outras ferramentas incluídas estão prontos para uso
+- modelos de comando que você pode fazer backup e compartilhar
+- suporte a cookies: faça login pelo navegador integrado e baixe conteúdo privado ou premium
+- gere PO tokens do YouTube com o provedor BGUtils integrado ou dentro do WebView do app
+- escolha NewPipe ou yt-dlp como extractor de busca de dados
+- Python com curl-cffi incluído, além de runtimes JS (QuickJS, Deno, NodeJS) para desafios de sites
+- atualize ou faça downgrade de pacotes como Python, FFmpeg, NodeJS, Deno e Aria2c sem atualizar o app
+- fontes personalizadas do yt-dlp e atualizações automáticas do yt-dlp
+- intents para automação com apps como o Tasker
+
+<b>App</b>
+
+- design Material You com opções de tema e barra de navegação inferior personalizável
+- modo anônimo para não salvar histórico nem registros
+- registros de download, histórico de pesquisa e um histórico detalhado de downloads
+- backup e restauração de quase tudo
+- gerenciador de arquivos para limpar caches e sobras

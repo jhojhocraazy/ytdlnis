@@ -1,0 +1,7 @@
+# Correção urgente
+
+Se você atualizou recentemente para a 1.9.1, recomendo atualizar para esta versão agora
+
+- Corrigida a barra de navegação inferior que ocultava o botão Mais, desculpe
+- Aplicativo registrado na API do lrclib para não ser limitado por taxa, além de política de novas tentativas
+- A restauração de configurações agora só aceita arquivos json
