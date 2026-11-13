@@ -40,6 +40,8 @@ jobs:
           $parent = Split-Path $env:GITHUB_WORKSPACE -Parent
           $script = Join-Path $env:GITHUB_WORKSPACE ".github\scripts\sync-check.ps1"
           Copy-Item -Path $script -Destination (Join-Path $parent "sync-check.ps1") -Force
+          $baseline = Join-Path $env:GITHUB_WORKSPACE ".github\scripts\baseline.json"
+          Copy-Item -Path $baseline -Destination (Join-Path $parent ".sync-baseline.json") -Force
           Write-Output "workspace=$parent repo=$env:REPO_NAME"
 
       - name: Detect delta

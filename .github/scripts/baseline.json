@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-13T01:19:40.0033552-03:00",
+  "repos": {
+    "ytdlnis": {
+      "baseCommit": "00f3b1b95378adb169314b61f13c1e2a641ef9ee",
+      "upstreamRef": "upstream/main",
+      "updatedAt": "2026-11-13T01:19:40.0034381-03:00",
+      "note": "Baseline fixada para o workflow single-repo"
+    }
+  }
+}
