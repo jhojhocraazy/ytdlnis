@@ -128,68 +128,68 @@ jobs:
           git push --force origin "HEAD:refs/heads/$branch"
           $existing = gh pr list --repo $repo --head $branch --json number --jq ".[0].number" 2>$null
           $body = @'
-## Summary
-
-Automated upstream delta report for ytdlnis.
-
-## PR type
-
-- [ ] Reproducible bug fix
-- [ ] UI glitch/bug fix
-- [ ] Behavior bug/regression fix
-- [x] Small maintenance only, with no UI or behavior change
-- [ ] Docs accuracy fix
-- [ ] Translation/localization only
-- [ ] Approved larger or directional change
-
-## Why
-
-Upstream added new translation keys; this PR records the delta and AI suggestions for review before translation.
-
-## Issue or approval
-
-No linked issue: automated upstream delta report, no code change.
-
-## UI / behavior impact
-
-- [x] No UI change
-- [x] No behavior change
-- [ ] UI changed only to fix a documented glitch/bug
-- [ ] Behavior changed only to fix a documented bug/regression
-- [ ] UI change has explicit maintainer approval
-- [ ] Behavior change has explicit maintainer approval
-
-## Policy check
-
-- [x] I have read and understood `CONTRIBUTING.md`.
-- [x] This PR is small, focused, and limited to one problem.
-- [x] This PR is not cosmetic-only.
-- [x] Any UI change fixes a linked glitch/bug and includes visual proof, or this PR has no UI change.
-- [x] Any behavior change fixes a linked bug/regression or has explicit approval, or this PR has no behavior change.
-- [x] This PR does not bundle unrelated refactors, cleanups, formatting, or drive-by changes.
-- [x] This PR does not add dependencies, architecture changes, migrations, or product-direction changes without explicit approval.
-- [x] I listed the testing performed below.
-
-## Scope boundaries
-
-Only `.github/i18n-delta.md` and `.github/i18n-delta.json` are added. No locale, source, or build file is modified.
-
-## Testing
-
-`sync-check.ps1` ran on `windows-latest` and generated the delta; the JSON parsed successfully. No runtime test is needed because no code changes.
-
-## Screenshots / Video
-
-Not a UI change.
-
-## Breaking changes
-
-None.
-
-## Linked issues
-
-No linked issue - automated translation delta report.
-'@
+          ## Summary
+          
+          Automated upstream delta report for ytdlnis.
+          
+          ## PR type
+          
+          - [ ] Reproducible bug fix
+          - [ ] UI glitch/bug fix
+          - [ ] Behavior bug/regression fix
+          - [x] Small maintenance only, with no UI or behavior change
+          - [ ] Docs accuracy fix
+          - [ ] Translation/localization only
+          - [ ] Approved larger or directional change
+          
+          ## Why
+          
+          Upstream added new translation keys; this PR records the delta and AI suggestions for review before translation.
+          
+          ## Issue or approval
+          
+          No linked issue: automated upstream delta report, no code change.
+          
+          ## UI / behavior impact
+          
+          - [x] No UI change
+          - [x] No behavior change
+          - [ ] UI changed only to fix a documented glitch/bug
+          - [ ] Behavior changed only to fix a documented bug/regression
+          - [ ] UI change has explicit maintainer approval
+          - [ ] Behavior change has explicit maintainer approval
+          
+          ## Policy check
+          
+          - [x] I have read and understood `CONTRIBUTING.md`.
+          - [x] This PR is small, focused, and limited to one problem.
+          - [x] This PR is not cosmetic-only.
+          - [x] Any UI change fixes a linked glitch/bug and includes visual proof, or this PR has no UI change.
+          - [x] Any behavior change fixes a linked bug/regression or has explicit approval, or this PR has no behavior change.
+          - [x] This PR does not bundle unrelated refactors, cleanups, formatting, or drive-by changes.
+          - [x] This PR does not add dependencies, architecture changes, migrations, or product-direction changes without explicit approval.
+          - [x] I listed the testing performed below.
+          
+          ## Scope boundaries
+          
+          Only `.github/i18n-delta.md` and `.github/i18n-delta.json` are added. No locale, source, or build file is modified.
+          
+          ## Testing
+          
+          `sync-check.ps1` ran on `windows-latest` and generated the delta; the JSON parsed successfully. No runtime test is needed because no code changes.
+          
+          ## Screenshots / Video
+          
+          Not a UI change.
+          
+          ## Breaking changes
+          
+          None.
+          
+          ## Linked issues
+          
+          No linked issue - automated translation delta report.
+          '@
           if ($existing) {
             gh pr edit --repo $repo $existing --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
           } else {
