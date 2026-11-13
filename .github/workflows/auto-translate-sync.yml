@@ -1,0 +1,131 @@
+name: Auto Translate Sync
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-translate-sync-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: windows-latest
+    env:
+      REPO_NAME: ytdlnis
+      UPSTREAM_URL: https://github.com/deniscerri/ytdlnis.git
+      UPSTREAM_BRANCH: main
+      DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure upstream
+        shell: pwsh
+        run: |
+          git remote remove upstream 2>$null
+          git remote add upstream $env:UPSTREAM_URL
+          git fetch upstream $env:UPSTREAM_BRANCH --no-tags
+
+      - name: Prepare single-repo workspace
+        shell: pwsh
+        run: |
+          $parent = Split-Path $env:GITHUB_WORKSPACE -Parent
+          $script = Join-Path $env:GITHUB_WORKSPACE ".github\scripts\sync-check.ps1"
+          Copy-Item -Path $script -Destination (Join-Path $parent "sync-check.ps1") -Force
+          Write-Output "workspace=$parent repo=$env:REPO_NAME"
+
+      - name: Detect delta
+        id: delta
+        shell: pwsh
+        run: |
+          $parent = Split-Path $env:GITHUB_WORKSPACE -Parent
+          $jsonPath = Join-Path $parent "delta.json"
+          & pwsh -NoProfile -File (Join-Path $parent "sync-check.ps1") -Root $parent -Repo $env:REPO_NAME -NoFetch -Json | Set-Content -Path $jsonPath -Encoding utf8
+          if ($LASTEXITCODE -ne 0) { throw "sync-check.ps1 falhou com exit $LASTEXITCODE" }
+          $delta = Get-Content -Path $jsonPath -Raw | ConvertFrom-Json
+          $pending = [int]$delta.summary.pendingKeys
+          Write-Output "pending=$pending"
+          "pending=$pending" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          if ($pending -gt 0) {
+            Copy-Item -Path $jsonPath -Destination (Join-Path $env:GITHUB_WORKSPACE ".github\i18n-delta.json") -Force
+          }
+
+      - name: Build delta report
+        if: steps.delta.outputs.pending != '0'
+        shell: pwsh
+        env:
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+        run: |
+          $json = Get-Content -Path ".github\i18n-delta.json" -Raw
+          $delta = $json | ConvertFrom-Json
+          $agents = Get-Content -Path "AGENTS.md" -Raw
+          $lines = New-Object System.Collections.Generic.List[string]
+          $lines.Add("# Delta upstream — $env:REPO_NAME")
+          $lines.Add("")
+          $lines.Add("- Gerado em: $(Get-Date -Format o)")
+          $lines.Add("- Base local: $($delta.repos[0].baseCommit)")
+          $lines.Add("- Upstream: $($delta.repos[0].upstreamRef) / $($delta.repos[0].upstreamCommit)")
+          $lines.Add("- Chaves pendentes: $($delta.summary.pendingKeys)")
+          $lines.Add("")
+          $lines.Add("## Chaves detectadas")
+          $lines.Add("")
+          $lines.Add('```json')
+          $lines.Add($json)
+          $lines.Add('```')
+          $lines.Add("")
+          $lines.Add("## Sugestões DeepSeek")
+          $lines.Add("")
+          if (-not [string]::IsNullOrWhiteSpace($env:DEEPSEEK_API_KEY)) {
+            try {
+              $body = @{
+                model = "deepseek-chat"
+                temperature = 0.2
+                messages = @(
+                  @{ role = "system"; content = "Você é o agente de localização pt-BR deste repositório. Siga estritamente o AGENTS.md. Traduza apenas as chaves listadas, preserve placeholders, ordem e limites. Responda em Markdown com a tabela: chave | EN | sugestão pt-BR | justificativa." },
+                  @{ role = "user"; content = "AGENTS.md:`n$agents`n`nDelta JSON:`n$json" }
+                )
+              } | ConvertTo-Json -Depth 10
+              $response = Invoke-RestMethod -Uri "https://api.deepseek.com/chat/completions" -Method Post -Headers @{ Authorization = "Bearer $env:DEEPSEEK_API_KEY" } -ContentType "application/json" -Body $body -TimeoutSec 180
+              $lines.Add($response.choices[0].message.content)
+            }
+            catch {
+              $lines.Add("> Falha ao consultar a API DeepSeek: $($_.Exception.Message)")
+            }
+          }
+          else {
+            $lines.Add("> Secret DEEPSEEK_API_KEY não configurada; relatório gerado sem sugestões.")
+          }
+          $lines.Add("")
+          $lines.Add("> Revise as sugestões e aplique apenas as chaves listadas, seguindo o AGENTS.md local. Este PR não altera os catálogos automaticamente.")
+          $lines -join "`n" | Set-Content -Path ".github\i18n-delta.md" -Encoding utf8
+
+      - name: Commit report and open pull request
+        if: steps.delta.outputs.pending != '0'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          $branch = "i18n/upstream-delta"
+          git checkout -B $branch
+          git add .github/i18n-delta.md .github/i18n-delta.json
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) { Write-Output "Sem mudancas para commit"; exit 0 }
+          git commit -m "i18n: upstream delta report ($env:REPO_NAME)"
+          git push --force origin "HEAD:refs/heads/$branch"
+          $existing = gh pr list --head $branch --json number --jq ".[0].number" 2>$null
+          $body = "Delta upstream detectado para $env:REPO_NAME. O relatório .github/i18n-delta.md contém as chaves e as sugestões DeepSeek. Revise e aplique somente o delta, seguindo o AGENTS.md local."
+          if ($existing) {
+            gh pr edit $existing --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
+          } else {
+            gh pr create --base $env:GITHUB_REF_NAME --head $branch --title "i18n: upstream delta ($env:REPO_NAME)" --body $body
+          }
