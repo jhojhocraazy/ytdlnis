@@ -68,7 +68,8 @@ jobs:
         run: |
           $json = Get-Content -Path ".github\i18n-delta.json" -Raw
           $delta = $json | ConvertFrom-Json
-          $agents = Get-Content -Path "AGENTS.md" -Raw
+          $agentsPath = if (Test-Path "AGENTS.md") { "AGENTS.md" } elseif (Test-Path ".github\scripts\AGENTS.md") { ".github\scripts\AGENTS.md" } else { "" }
+          $agents = if ($agentsPath) { Get-Content -Path $agentsPath -Raw } else { "AGENTS.md local nao encontrado; use as regras gerais de localizacao do repositorio." }
           $lines = New-Object System.Collections.Generic.List[string]
           $lines.Add("# Delta upstream — $env:REPO_NAME")
           $lines.Add("")
