@@ -143,6 +143,7 @@ jobs:
           $fileContent = [System.Net.Http.ByteArrayContent]::new($bytes)
           $fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse('application/xml')
           $multipart = [System.Net.Http.MultipartFormDataContent]::new()
+          $multipart.Add([System.Net.Http.StringContent]::new('true'), 'overwrite')
           $multipart.Add([System.Net.Http.StringContent]::new('translate'), 'method')
           $multipart.Add([System.Net.Http.StringContent]::new('replace-translated'), 'conflict')
           $multipart.Add($fileContent, 'file', 'strings.xml')
