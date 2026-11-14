@@ -110,6 +110,34 @@ jobs:
           $lines.Add("> Revise as sugestões e aplique apenas as chaves listadas, seguindo o AGENTS.md local. Este PR não altera os catálogos automaticamente.")
           $lines -join "`n" | Set-Content -Path ".github\i18n-delta.md" -Encoding utf8
 
+      - name: Upload pt-BR to Weblate
+        if: github.event_name == 'workflow_dispatch' || steps.delta.outputs.pending != '0'
+        shell: pwsh
+        env:
+          WEBLATE_API_TOKEN: ${{ secrets.WEBLATE_API_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ([string]::IsNullOrWhiteSpace($env:WEBLATE_API_TOKEN)) { throw 'WEBLATE_API_TOKEN ausente' }
+          $base = 'https://hosted.weblate.org/api'
+          $headers = @{ Authorization = "Token $($env:WEBLATE_API_TOKEN)"; Accept = 'application/json' }
+          $project = 'ytdlnis'
+          $componentHint = 'ytdlnis'
+          $language = 'pt_BR'
+          $file = Join-Path $env:GITHUB_WORKSPACE 'app\src\main\res\values-pt-rBR\strings.xml'
+          if (-not (Test-Path $file)) { throw "Arquivo nao encontrado: $file" }
+          $components = Invoke-RestMethod -Uri "$base/projects/$project/components/" -Headers $headers
+          $items = if ($null -ne $components.results) { @($components.results) } else { @($components) }
+          $slugs = ($items | ForEach-Object { $_.slug }) -join ','
+          Write-Output "WEBLATE_COMPONENTS project=$project slugs=$slugs"
+          $chosen = $items | Where-Object { $_.slug -eq $componentHint -or $_.name -eq $componentHint } | Select-Object -First 1
+          if (-not $chosen) { $chosen = $items | Where-Object { $_.slug -like "*$componentHint*" -or $_.name -like "*$componentHint*" } | Select-Object -First 1 }
+          if (-not $chosen -and $items.Count -eq 1) { $chosen = $items[0] }
+          if (-not $chosen) { throw "Componente Weblate nao encontrado para $project" }
+          $component = $chosen.slug
+          $url = "$base/translations/$project/$component/$language/file/"
+          $response = Invoke-WebRequest -Method Post -Uri $url -Headers $headers -Form @{ file = Get-Item $file }
+          Write-Output "WEBLATE_UPLOAD_OK status=$($response.StatusCode) project=$project component=$component language=$language"
+          Write-Output $response.Content
       - name: Commit report and open pull request
         if: steps.delta.outputs.pending != '0'
         shell: pwsh
