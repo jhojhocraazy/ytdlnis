@@ -121,7 +121,7 @@ jobs:
           $base = 'https://hosted.weblate.org/api'
           $headers = @{ Authorization = "Token $($env:WEBLATE_API_TOKEN)"; Accept = 'application/json' }
           $project = 'ytdlnis'
-          $componentHint = 'ytdlnis'
+          $componentHint = 'strings'
           $language = 'pt_BR'
           $file = Join-Path $env:GITHUB_WORKSPACE 'app\src\main\res\values-pt-rBR\strings.xml'
           if (-not (Test-Path $file)) { throw "Arquivo nao encontrado: $file" }
@@ -129,11 +129,14 @@ jobs:
           $items = if ($null -ne $components.results) { @($components.results) } else { @($components) }
           $slugs = ($items | ForEach-Object { $_.slug }) -join ','
           Write-Output "WEBLATE_COMPONENTS project=$project slugs=$slugs"
+          $formats = ($items | ForEach-Object { "$($_.slug)=$($_.file_format)" }) -join ","
+          Write-Output "WEBLATE_FORMATS $formats"
           $chosen = $items | Where-Object { $_.slug -eq $componentHint -or $_.name -eq $componentHint } | Select-Object -First 1
           if (-not $chosen) { $chosen = $items | Where-Object { $_.slug -like "*$componentHint*" -or $_.name -like "*$componentHint*" } | Select-Object -First 1 }
           if (-not $chosen -and $items.Count -eq 1) { $chosen = $items[0] }
           if (-not $chosen) { throw "Componente Weblate nao encontrado para $project" }
           $component = $chosen.slug
+          Write-Output "WEBLATE_CHOSEN slug=$component name=$($chosen.name) format=$($chosen.file_format)"
           $url = "$base/translations/$project/$component/$language/file/"
           $response = Invoke-WebRequest -Method Post -Uri $url -Headers $headers -Form @{ file = Get-Item $file }
           Write-Output "WEBLATE_UPLOAD_OK status=$($response.StatusCode) project=$project component=$component language=$language"
