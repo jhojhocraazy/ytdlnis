@@ -115,32 +115,41 @@ jobs:
         shell: pwsh
         env:
           WEBLATE_API_TOKEN: ${{ secrets.WEBLATE_API_TOKEN }}
+          WEBLATE_PROJECT: ytdlnis
+          WEBLATE_COMPONENT: strings
+          WEBLATE_LANGUAGE: pt_BR
         run: |
           $ErrorActionPreference = 'Stop'
           if ([string]::IsNullOrWhiteSpace($env:WEBLATE_API_TOKEN)) { throw 'WEBLATE_API_TOKEN ausente' }
+          foreach ($envName in @('WEBLATE_PROJECT','WEBLATE_COMPONENT','WEBLATE_LANGUAGE')) {
+            $value = [Environment]::GetEnvironmentVariable($envName)
+            if ([string]::IsNullOrWhiteSpace($value)) { throw "$envName ausente" }
+            if ($value -notmatch '^[A-Za-z0-9._-]+$') { throw "$envName invalido: $value" }
+          }
+          $project = $env:WEBLATE_PROJECT
+          $component = $env:WEBLATE_COMPONENT
+          $language = $env:WEBLATE_LANGUAGE
           $base = 'https://hosted.weblate.org/api'
-          $headers = @{ Authorization = "Token $($env:WEBLATE_API_TOKEN)"; Accept = 'application/json' }
-          $project = 'ytdlnis'
-          $componentHint = 'strings'
-          $language = 'pt_BR'
           $file = Join-Path $env:GITHUB_WORKSPACE 'app\src\main\res\values-pt-rBR\strings.xml'
           if (-not (Test-Path $file)) { throw "Arquivo nao encontrado: $file" }
-          $components = Invoke-RestMethod -Uri "$base/projects/$project/components/" -Headers $headers
-          $items = if ($null -ne $components.results) { @($components.results) } else { @($components) }
-          $slugs = ($items | ForEach-Object { $_.slug }) -join ','
-          Write-Output "WEBLATE_COMPONENTS project=$project slugs=$slugs"
-          $formats = ($items | ForEach-Object { "$($_.slug)=$($_.file_format)" }) -join ","
-          Write-Output "WEBLATE_FORMATS $formats"
-          $chosen = $items | Where-Object { $_.slug -eq $componentHint -or $_.name -eq $componentHint } | Select-Object -First 1
-          if (-not $chosen) { $chosen = $items | Where-Object { $_.slug -like "*$componentHint*" -or $_.name -like "*$componentHint*" } | Select-Object -First 1 }
-          if (-not $chosen -and $items.Count -eq 1) { $chosen = $items[0] }
-          if (-not $chosen) { throw "Componente Weblate nao encontrado para $project" }
-          $component = $chosen.slug
-          Write-Output "WEBLATE_CHOSEN slug=$component name=$($chosen.name) format=$($chosen.file_format)"
+          $bytes = [System.IO.File]::ReadAllBytes($file)
+          if ($bytes.Length -le 0) { throw 'Arquivo vazio' }
+          # project/component/language sao path params oficiais; o unico campo multipart e file.
           $url = "$base/translations/$project/$component/$language/file/"
-          $response = Invoke-WebRequest -Method Post -Uri $url -Headers $headers -Form @{ file = Get-Item $file }
-          Write-Output "WEBLATE_UPLOAD_OK status=$($response.StatusCode) project=$project component=$component language=$language"
-          Write-Output $response.Content
+          Write-Output "WEBLATE_TARGET project=$project component=$component language=$language bytes=$($bytes.Length)"
+          $client = [System.Net.Http.HttpClient]::new()
+          $client.DefaultRequestHeaders.Authorization = [System.Net.Http.Headers.AuthenticationHeaderValue]::new('Token', $env:WEBLATE_API_TOKEN)
+          $client.DefaultRequestHeaders.Accept.Add([System.Net.Http.Headers.MediaTypeWithQualityHeaderValue]::new('application/json'))
+          $fileContent = [System.Net.Http.ByteArrayContent]::new($bytes)
+          $fileContent.Headers.ContentType = [System.Net.Http.Headers.MediaTypeHeaderValue]::Parse('application/xml')
+          $multipart = [System.Net.Http.MultipartFormDataContent]::new()
+          $multipart.Add($fileContent, 'file', 'strings.xml')
+          $response = $client.PostAsync($url, $multipart).GetAwaiter().GetResult()
+          $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+          Write-Output "WEBLATE_UPLOAD status=$([int]$response.StatusCode) project=$project component=$component language=$language"
+          Write-Output $body
+          if (-not $response.IsSuccessStatusCode) { throw "Weblate upload falhou: $([int]$response.StatusCode)" }
+          Write-Output "WEBLATE_UPLOAD_OK status=$([int]$response.StatusCode)"
       - name: Commit report and open pull request
         if: steps.delta.outputs.pending != '0'
         shell: pwsh
