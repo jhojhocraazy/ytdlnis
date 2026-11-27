@@ -1,0 +1,96 @@
+{
+  "tool": "sync-check.ps1",
+  "version": "1.0.0",
+  "generatedAt": "2026-11-27T16:03:00.9178195+00:00",
+  "root": "D:\\a\\ytdlnis",
+  "mode": "nofetch",
+  "summary": {
+    "analyzed": 1,
+    "updated": 0,
+    "newStrings": 1,
+    "removals": 0,
+    "gaps": 0,
+    "errors": 0,
+    "pendingKeys": 15,
+    "missingKeys": 0
+  },
+  "baselineUpdated": [],
+  "repos": [
+    {
+      "name": "ytdlnis",
+      "branch": "main",
+      "head": "4000f1b496acbe5585271deee9a6f57e722eac14",
+      "headShort": "4000f1b4",
+      "upstreamRef": "upstream/main",
+      "upstreamCommit": "0c2fd4ebeb52dd21e9b679993bc944d07a519b3e",
+      "baseCommit": "00f3b1b95378adb169314b61f13c1e2a641ef9ee",
+      "baseSource": "baseline",
+      "ahead": 20,
+      "behind": 60,
+      "status": "Novas strings",
+      "added": 15,
+      "modified": 0,
+      "removed": 1,
+      "pending": 15,
+      "baseKeys": 718,
+      "missingKeys": 0,
+      "extraKeys": 1,
+      "coveragePercent": 100.0,
+      "dirtyFiles": [],
+      "sourceDirty": [],
+      "fetchError": "",
+      "error": "",
+      "warnings": [
+        "Modo offline (-NoFetch): git fetch não executado."
+      ],
+      "files": [
+        {
+          "path": "app/src/main/res/values/arrays.xml",
+          "target": "app/src/main/res/values-pt-rBR/arrays.xml",
+          "targetExists": true,
+          "baseKeys": 1,
+          "upstreamKeys": 1,
+          "added": [],
+          "modified": [],
+          "removed": [],
+          "missing": [],
+          "extra": [],
+          "warning": ""
+        },
+        {
+          "path": "app/src/main/res/values/strings.xml",
+          "target": "app/src/main/res/values-pt-rBR/strings.xml",
+          "targetExists": true,
+          "baseKeys": 717,
+          "upstreamKeys": 731,
+          "added": [
+            "allow_install_unknown_apps",
+            "install_cancelled",
+            "install_failed_abi",
+            "install_failed_code",
+            "install_failed_downgrade",
+            "install_failed_incompatible",
+            "install_failed_storage",
+            "installer_no_confirmation",
+            "installer_shizuku_description",
+            "installer_shizuku_not_running",
+            "installer_system_description",
+            "installer_system_unavailable",
+            "no_external_player",
+            "open_in_external_player",
+            "selected_cuts"
+          ],
+          "modified": [],
+          "removed": [
+            "background_update_ytdlp"
+          ],
+          "missing": [],
+          "extra": [
+            "background_update_ytdlp"
+          ],
+          "warning": ""
+        }
+      ]
+    }
+  ]
+}
